@@ -4,9 +4,7 @@ import {
   PHASES,
   PHASE_COLORS,
   RELATION_TYPES,
-  getAllCategories,
   getAllRelations,
-  getPhaseForCategory,
 } from '../data/ontology';
 import type { Category } from '../data/ontology';
 
@@ -33,7 +31,7 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 export default function RadialGraph({ onSelectNode, selectedNode, activeFilters }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [, setHoveredNode] = useState<string | null>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null);
 
   const buildGraph = useCallback(() => {
@@ -68,7 +66,6 @@ export default function RadialGraph({ onSelectNode, selectedNode, activeFilters 
     });
 
     // Build nodes
-    const categories = getAllCategories();
     const phaseCount = PHASES.length;
     const nodes: GraphNode[] = [];
 
@@ -215,20 +212,20 @@ export default function RadialGraph({ onSelectNode, selectedNode, activeFilters 
       .call(
         d3
           .drag<SVGGElement, GraphNode>()
-          .on('start', (event, d) => {
+          .on('start', (event: d3.D3DragEvent<SVGGElement, GraphNode, GraphNode>, d: GraphNode) => {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
           })
-          .on('drag', (event, d) => {
+          .on('drag', (event: d3.D3DragEvent<SVGGElement, GraphNode, GraphNode>, d: GraphNode) => {
             d.fx = event.x;
             d.fy = event.y;
           })
-          .on('end', (event, d) => {
+          .on('end', (event: d3.D3DragEvent<SVGGElement, GraphNode, GraphNode>, d: GraphNode) => {
             if (!event.active) simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
-          })
+          }) as any
       );
 
     nodeElements
@@ -273,8 +270,8 @@ export default function RadialGraph({ onSelectNode, selectedNode, activeFilters 
         const connectedIds = new Set<string>();
         connectedIds.add(d.id);
         linkElements.each(function (l) {
-          const sourceId = typeof l.source === 'object' ? (l.source as GraphNode).id : l.source;
-          const targetId = typeof l.target === 'object' ? (l.target as GraphNode).id : l.target;
+          const sourceId = typeof l.source === 'object' ? (l.source as GraphNode).id : String(l.source);
+          const targetId = typeof l.target === 'object' ? (l.target as GraphNode).id : String(l.target);
           if (sourceId === d.id || targetId === d.id) {
             connectedIds.add(sourceId);
             connectedIds.add(targetId);
